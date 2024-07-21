@@ -1,7 +1,9 @@
 package termio
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -21,13 +23,14 @@ type Prompt struct {
 	prompt_deco_template        []string
 	prompt_deco_variables       map[string]string
 
-	err error
+	reader *bufio.Reader
+	err    error
 }
 
 func (p *Prompt) Get_line() (string, error) {
 	p.make_prompt_deco()
 	p.print_prompt_deco()
-	line, err := read_line()
+	line, err := p.read_line()
 	p.line = line
 	p.err = err
 	return line, err
@@ -48,7 +51,32 @@ func (p *Prompt) make_prompt_deco() {
 }
 
 func (p *Prompt) parse_prompt_deco_string_template() {
+	escaped := false
+	variable := false
+	p.prompt_deco_template = []string{}
+	current_part := ""
+	for _, char := range p.prompt_deco_string_template {
 
+		if char == '\\' && !escaped {
+			escaped = true
+			continue
+		} else if escaped && char == '$' {
+			current_part += string(char)
+		} else if char == '$' {
+			if variable {
+				p.prompt_deco_template = append(p.prompt_deco_template, current_part+"$")
+				current_part = ""
+			} else {
+				p.prompt_deco_template = append(p.prompt_deco_template, current_part)
+				current_part = "$"
+			}
+			variable = !variable
+		} else {
+			current_part += string(char)
+		}
+		escaped = false
+	}
+	p.prompt_deco_template = append(p.prompt_deco_template, current_part)
 }
 
 func (p *Prompt) print_prompt_deco() {
@@ -56,22 +84,23 @@ func (p *Prompt) print_prompt_deco() {
 }
 
 func Make_prompt() Prompt {
-	prompt_deco_template := []string{"[", "$t:H$", ":", "$t:M$", ":", "$t:S$", "]"}
 	prompt := Prompt{
 		"",
 
 		"",
+		// "[$t:H$:$t:M$:$t:S$]",
 		"[$t:H$:$t:M$:$t:S$]",
-		prompt_deco_template,
+		[]string{},
 		map[string]string{},
 
+		bufio.NewReader(os.Stdin),
 		nil,
 	}
+	prompt.parse_prompt_deco_string_template()
 	return prompt
 }
 
-func read_line() (string, error) {
-	var line string
-	_, err := fmt.Scanln(&line)
-	return line, err
+func (p *Prompt) read_line() (string, error) {
+	line, err := p.reader.ReadString('\n')
+	return line[:len(line)-1], err
 }
