@@ -6,7 +6,7 @@ import (
 )
 
 func main() {
-	prompt := termio.Make_prompt()
+	prompt := termio.Make_prompt("%red[$t:H$:$t:M$:$t:S$]  ")
 	for {
 		line, _ := prompt.Get_line()
 		fmt.Println(line)
