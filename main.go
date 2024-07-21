@@ -1,11 +1,9 @@
 package main
 
-import (
+/* import (
 	termio "hyperterm/src/io"
 )
+*/
 
 func main() {
-	for {
-		termio.Read_line()
-	}
 }
