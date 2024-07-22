@@ -25,6 +25,8 @@ type Prompt struct {
 	err    error
 }
 
+// Deprecated
+/*
 func (p *Prompt) Get_line() (string, error) {
 	p.make_prompt_deco()
 	p.print_prompt_deco()
@@ -33,6 +35,7 @@ func (p *Prompt) Get_line() (string, error) {
 	p.err = err
 	return line, err
 }
+*/
 
 func Make_prompt(prompt_deco_string_template string) Prompt {
 	prompt := Prompt{
@@ -48,9 +51,4 @@ func Make_prompt(prompt_deco_string_template string) Prompt {
 	}
 	prompt.parse_prompt_deco_string_template()
 	return prompt
-}
-
-func (p *Prompt) read_line() (string, error) {
-	line, err := p.reader.ReadString('\n')
-	return line[:len(line)-1], err
 }

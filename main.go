@@ -1,14 +1,21 @@
 package main
 
 import (
-	"fmt"
 	termio "hyperterm/src/termio"
 )
 
 func main() {
-	prompt := termio.Make_prompt("%red[$t:H$:$t:M$:$t:S$]  ")
+	screen := termio.New_screen()
+	defer screen.End()
+
 	for {
-		line, _ := prompt.Get_line()
-		fmt.Println(line)
+		screen.Print_prompt()
+		_, key_command := screen.Get_line()
+		if key_command == int(termio.Quit) {
+			break
+		}
 	}
+	// line, _ := screen.Prompt.Get_line()
+	// fmt.Println(line)
+
 }
