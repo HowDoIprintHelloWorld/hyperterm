@@ -1,7 +1,6 @@
 package termio
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -72,6 +71,6 @@ func (p *Prompt) parse_prompt_deco_string_template() {
 	p.set_prompt_colors()
 }
 
-func (p *Prompt) print_prompt_deco() {
-	fmt.Print(p.prompt_deco)
-}
+// func (p *Prompt) print_prompt_deco() {
+// 	fmt.Print(p.prompt_deco)
+// }

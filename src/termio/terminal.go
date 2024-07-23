@@ -11,6 +11,7 @@ type Key_command int
 const (
 	No_command Key_command = iota
 	Quit
+	Break
 )
 
 type Screen struct {
@@ -47,6 +48,8 @@ func New_screen() *Screen {
 	nc.Cursor(1)
 	nc.Echo(false)
 	nc.SetEscDelay(0)
+	nc.StartColor()
+	nc.UseDefaultColors()
 	stdscr.Keypad(true)
 	stdscr.ScrollOk(true)
 	// NOTE: replace with deco_template from settings
@@ -84,7 +87,20 @@ func (s *Screen) Print_prompt() {
 	prompt_deco := s.Prompt.prompt_deco
 	y, _ := s.stdscr.CursorYX()
 	s.stdscr.Move(y, 0)
+	nc.InitPair(1, nc.C_CYAN, -1)
+	s.stdscr.ColorOn(1)
 	s.stdscr.Print(prompt_deco)
+	s.stdscr.ColorOff(1)
+}
+
+func (s *Screen) new_line() {
+	y, _ := s.stdscr.CursorYX()
+	max_y, _ := s.stdscr.MaxYX()
+	if y >= max_y-1 {
+		s.stdscr.Scroll(1)
+	}
+	s.stdscr.Move(y+1, 0)
+	s.stdscr.ClearToEOL()
 }
 
 func (s *Screen) Get_line() (string, int) {
@@ -101,15 +117,15 @@ func (s *Screen) Get_line() (string, int) {
 		s.stdscr.Refresh()
 		char = s.stdscr.GetChar()
 		y, x := s.stdscr.CursorYX()
-		max_y, max_x := s.stdscr.MaxYX()
+		_, max_x := s.stdscr.MaxYX()
 		switch char {
 		case 10: // Enter
 			active = false
-			if y >= max_y-1 {
-				s.stdscr.Scroll(1)
-			}
-			s.stdscr.Move(y+1, 0)
-			s.stdscr.ClearToEOL()
+			s.new_line()
+		case 3: // CTRL+C
+			active = false
+			key_command = Break
+			s.new_line()
 		case 4: // CTRL+D
 			active = false
 			key_command = Quit

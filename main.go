@@ -13,6 +13,8 @@ func main() {
 		_, key_command := screen.Get_line()
 		if key_command == int(termio.Quit) {
 			break
+		} else if key_command == int(termio.Break) {
+			continue
 		}
 	}
 	// line, _ := screen.Prompt.Get_line()
