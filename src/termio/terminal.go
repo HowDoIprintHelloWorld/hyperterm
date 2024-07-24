@@ -51,6 +51,7 @@ func (l *Line) content_to_string() string {
 	return content
 }
 
+// IMPORTANT: not yet implemented
 func (l *Line) format() {
 	l.content_formatted = []Line_segment{
 		Line_segment{
