@@ -46,7 +46,3 @@ func (p *Prompt) parse_prompt_deco_string_template() {
 	}
 	p.prompt_deco_template = append(p.prompt_deco_template, current_part)
 }
-
-// func (p *Prompt) print_prompt_deco() {
-// 	fmt.Print(p.prompt_deco)
-// }
