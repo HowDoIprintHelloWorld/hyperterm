@@ -20,9 +20,60 @@ type Screen struct {
 }
 
 type Line struct {
-	content         string
-	cursor_position int
-	max_len         int
+	content_string    string
+	content_formatted []Line_segment
+	cursor_position   int
+	max_len           int
+}
+
+/*
+Lines are set up as follows:
+	line := []Line_segment{line_segment1, line_segment2, ..., line_segmentN}
+A line consists of multiple line segments, each having one distinguishing feature from the next.
+For example, line_segment2 may be displayed bold and red, whereas line_segment1 is colored white.
+The function responsible for printing lines can iterate over every line_segment and set its
+output-style according to the specifications of the line_segment.
+*/
+
+type Line_segment struct {
+	text_content string
+	bold         bool
+	italic       bool
+
+	color int
+}
+
+func (l *Line) content_to_string() string {
+	content := ""
+	for _, segment := range l.content_formatted {
+		content += segment.text_content
+	}
+	return content
+}
+
+func (l *Line) format() {
+	l.content_formatted = []Line_segment{
+		Line_segment{
+			l.content_string,
+			false,
+			false,
+			nc.C_WHITE,
+		},
+	}
+}
+
+func (l *Line) insert_character(position int, character string) {
+	content_string := l.content_string
+	content_string = content_string[:position] + character + content_string[position:]
+	l.content_string = content_string
+	l.format()
+}
+
+func (l *Line) delete_character(position int) {
+	content_string := l.content_string
+	content_string = content_string[:position-1] + content_string[position:]
+	l.content_string = content_string
+	l.format()
 }
 
 func (s *Screen) End() {
@@ -33,6 +84,7 @@ func (s *Screen) create_line() *Line {
 	_, max_x := s.stdscr.MaxYX()
 	return &Line{
 		"",
+		[]Line_segment{},
 		0,
 		max_x,
 	}
@@ -62,23 +114,17 @@ func New_screen() *Screen {
 	return &screen
 }
 
-func (l *Line) insert_character(position int, character string) {
-	l.content = l.content[:position] + character + l.content[position:]
-}
-
-func (l *Line) delete_character(position int) {
-	l.content = l.content[:position-1] + l.content[position:]
-}
-
 func (s *Screen) print_prompt_content(y int, x int, initial_x int, line *Line) {
 	s.stdscr.Move(y, initial_x)
 	s.stdscr.ClearToEOL()
-	s.stdscr.Print(line.content)
+	for _, segment := range line.content_formatted {
+		s.stdscr.Print(segment.text_content)
+	}
 
 	// This is for testing only. It shows the current line content
 	s.stdscr.Move(3, 2)
 	s.stdscr.ClearToEOL()
-	s.stdscr.Print(line.content)
+	s.stdscr.Print(line.content_formatted)
 	s.stdscr.Move(y, x+1)
 }
 
@@ -118,6 +164,7 @@ func (s *Screen) Get_line() (string, int) {
 		char = s.stdscr.GetChar()
 		y, x := s.stdscr.CursorYX()
 		_, max_x := s.stdscr.MaxYX()
+		line_length := len(line.content_string)
 		switch char {
 		case 10: // Enter
 			active = false
@@ -143,12 +190,12 @@ func (s *Screen) Get_line() (string, int) {
 			}
 			s.stdscr.Move(y, x-1)
 		case nc.KEY_RIGHT:
-			if x-initial_x > len(line.content)-1 {
+			if x-initial_x > line_length-1 {
 				break
 			}
 			s.stdscr.Move(y, x+1)
 		default:
-			if char < 33 || char > 126 {
+			if char < 32 || char > 126 {
 				break
 			} else if x+2 >= max_x {
 				break
@@ -157,5 +204,5 @@ func (s *Screen) Get_line() (string, int) {
 			s.print_prompt_content(y, x, initial_x, line)
 		}
 	}
-	return line.content, int(key_command)
+	return line.content_to_string(), int(key_command)
 }
